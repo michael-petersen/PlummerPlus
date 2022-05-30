@@ -1,0 +1,6 @@
+# hidden files
+src/__pycache__
+*.DS_Store
+
+# the default output file
+fort.10

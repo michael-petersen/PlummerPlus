@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 #
-# PROGRAM: PlummerPlus.py 
+# PROGRAM: PlummerPlus.py
 #
 # Description: Generates realisation of anisotropic and rotating models with plummer model density distribution
-# 		Note on units G=M=a=1 for generation but values are rescales to Henon units for output 
+# 		Note on units G=M=a=1 for generation but values are rescales to Henon units for output
 #		(see scale factors: lfact=3.0*pi/16.0, vfact=1/lfact. default output file fort.10)
 #
 # AUTHOR: Phil Breen, University of Edinburgh
-# 
+#
 # LICENSE:	MIT, This program is comes with ABSOLUTELY NO WARRANTY.
-#              
-# 
+#
+#
 # CITATION: Please use Breen, Varri, Heggie 2018 (https://arxiv.org/abs/)
 #
 # EXAMPLES:
 #       use "chmod a+x PlummerPlus.py" to make script executable, alternativaly use "python PlummerPlus.py ...."
 #
-# 	isotropic plummmer with 8K particles  
+# 	isotropic plummmer with 8K particles
 #	./PlummerPlus.py -n 8192
 #
-#	8k anisotropic plummer with Dejonghe with q=-2 (see http://adsabs.harvard.edu/full/1987MNRAS.224...13D) 
+#	8k anisotropic plummer with Dejonghe with q=-2 (see http://adsabs.harvard.edu/full/1987MNRAS.224...13D)
 #	./PlummerPlus.py -n 8192 -q -2
 #
 # 	8k Osipkov-Merritt  radially anisotropic plummer with anisotropic radius ra=1.0 (see e.g. merritt, d. 1985. aj, 90, 1027)
@@ -30,13 +30,13 @@
 #
 #	8K isotropic plummmer with rotation via Lyden-Bell trick i.e. reverse velocities of 50% particles with L_z < 0
 #       ./PlummerPlus.py -n 8192 -a 0.5
-# 
-#	8K isotropic plummmer with offset rotation, 50% of the most bound stars rotating about z-axis 
-# 	least bound 50% rotating is offset by 90 degres (i.e. about y-axis). 
+#
+#	8K isotropic plummmer with offset rotation, 50% of the most bound stars rotating about z-axis
+# 	least bound 50% rotating is offset by 90 degres (i.e. about y-axis).
 #       Note most stars use -a for the fraction of stars reverse where as least bount stars use second value in -oa flag (i.e. -oa angle flipfraction)
 #       ./PlummerPlus.py -n 8192 -a 1.0  -oa 90.0 1.0 0.5
 #
-# 	for a high shear model, set offset to 180 degree (i.e. -z) and used mass fraction 0.67 (i.e. rotatin model with 0 net L!) 
+# 	for a high shear model, set offset to 180 degree (i.e. -z) and used mass fraction 0.67 (i.e. rotatin model with 0 net L!)
 # 	./PlummerPlus.py -n 10000  -a 1.0 -oa 180.0 1.0 0.67
 #
 #	create mass segrated model most bound 50% of the mass consisting of particles 10.0 times more massive then the least
@@ -44,71 +44,19 @@
 #
 """ PlummerPlus.py: generates realisation of anisotropic and rotating models with plummer model density distribution """
 
-import argparse
 import numpy as np
 import scipy.special as sci
 import sys
 from scipy.interpolate import interp1d
 from math import pi, sqrt, cos, sin, acos
 
-parser = argparse.ArgumentParser(description="Generates anisotropic and rotating models with plummer model density distribution  ")
+# local imports
+from src.quiet import *
+from src.args import *
+from src.positions import *
+from src.velocities import *
 
-npar = parser.add_mutually_exclusive_group()
-npar.add_argument("-n", help="number of particles (default: 1000)",
-                    type=int,default=1000,metavar="")
-
-npar.add_argument("-nk", help="number of particles in units of 1024, e.g. 32K",
-                    type=int,default=0,metavar="")
-
-parser.add_argument("-rs", help="random number generator seed (default: 101)",
-                    type=int,default=101,metavar="rand_seed")
-
-parser.add_argument("-rcut", help="outer cutoff radius",
-                    type=float,default=-1.0,metavar="")
-
-
-parser.add_argument("-o", help="name of output file (default: \"fort.10\")",
-                    type=str,default="fort.10",metavar="")
-
-parser.add_argument("-u", help="units (default: \"Henon units\")",
-                    type=str,default="HU",metavar="")
-
-
-# rotation parameters 
-parser.add_argument("-a", help="Lynden-Bell trick flip fraction",
-                    type=float,default=0,metavar="")
-
-parser.add_argument("-oa", help="Offset angle in degrees for particles below energy cut off and flip fraction for offset stars (e.g. -oa 90.0 0.5): OA offset angle, A2 flip fraction, MF mass fraction above which the offset is applied ",
-                    type=float,default=[0,0,-1],metavar=("OA","A2","MF"),nargs=3)
-
-
-parser.add_argument("-ms", help="Mass segregated model, set fraction of total mass (MF) and mass ratio (MR). This will reduce number of particles see Readme file. ",type=float,default=[0,0],metavar=("MF","MR"),nargs=2)
-
-parser.add_argument("-hs", help=" defines energy cut hs*pot(0) for counter rotation ",
-                   type=float,default=0,metavar="")
-
-
-parser.add_argument("-lcut", help=" cut on Lz/L  ",
-                    type=float,default=[-1,0,0],metavar=("G","AU","AO"),nargs=3)
-
-parser.add_argument("-icut", help=" cut on inclination normalise to range 0-1 (0-90 degrees)",
-                    type=float,default=[-1,0,0],metavar=("G","AU","AO"),nargs=3)
-
-# exclusice arguments for velocity space
-group = parser.add_mutually_exclusive_group()
-group.add_argument("-q", help="q values of Dejonghe (1987) anisotropic plummer models, q<=+2 ",
-                    type=float,default=0,metavar="")
-
-group.add_argument("-ra", help="anisotropic radius of Osipkov-Merritt radially anisotropic plummer model, ra >= 0.75",
-                    type=float,default=0,metavar="")
-
-group.add_argument("-e", help=" Einstein sphere, plummer model with only circular orbits ",
-                    action="store_true")
-
-parser.add_argument("-qt", help="Quiet start, place replicas of particles at 2*pi/qt intervals in plane of orbit, see Sellwood 1997",
-                    type=int,default=0,metavar="")
-
-
+args = parse_all_args()
 
 #-------- Python3 compatibility
 try:
@@ -117,19 +65,20 @@ except NameError:
     xrange = range
 #----------------------
 
-args = parser.parse_args()
-
+# set the random number seed
 np.random.seed(args.rs)
 
 if args.nk > 0:
 	args.n = 1024*args.nk
 
 
+# the workhorse here is the matrix w, which is
+# [mass, xpos, ypos, zpos, xvel, yvel, zvel]
 
-#--------- reduce n to n/qt 
+#--------- reduce n to n/qt
 if args.qt > 1:
 	#only for quiet starts
-	m = 1.0/float(args.n) 
+	m = 1.0/float(args.n)
 	args.n = int(args.n/args.qt)
 	w = np.zeros((args.n, 7))
 	# w[:,0] = mass, w[:,1:4] = x,y,z, w[:,4:] = vx,vy,zx
@@ -138,36 +87,17 @@ else:
 	# more general case
 	w = np.zeros((args.n, 7))
 	# w[:,0] = mass, w[:,1:4] = x,y,z, w[:,4:] = vx,vy,zx
-	w[:,0] = 1.0/float(args.n) 
- 
+	w[:,0] = 1.0/float(args.n)
+
 
 #---------------------------------generate positions------------------------------------
-
-if args.rcut == -1:
-	x = np.random.rand(args.n)
-else:
-	mcut = args.rcut**3/(args.rcut**2 + 1.0)**1.5
-	x = np.random.uniform(0.0, mcut, args.n)	
-
-r = np.reciprocal(np.sqrt(np.power(x,-2.0/3.0)-1.0))
-
-ctheta = np.random.uniform(-1.,1.0,args.n)
-stheta = np.sin(np.arccos(ctheta))
-phi = 2.0*pi*np.random.rand(args.n) 
-
-w[:,1] = stheta*np.cos(phi)
-w[:,2] = stheta*np.sin(phi)
-w[:,3] = ctheta
-
-w[:,1:4] = w[:,1:4]*r[:,None]
-
-
+w,r = generate_positions(args,w)
 
 
 
 #---------------------------------generate velocities------------------------------------
 
-#calucates orthogonal basis using r and returns random vr,vt units (needed for anisotorpic models)
+#calucates orthogonal basis using r and returns random vr,vt units (needed for anisotropic models)
 if args.q != 0 	or args.ra != 0 or args.e:
 	sign = [-1.0,1.0]
 	theta = 2.0*pi*np.random.rand(args.n)
@@ -180,10 +110,7 @@ if args.q != 0 	or args.ra != 0 or args.e:
 		e1 = [ri[1],-ri[0],0.0]
 		e1 /= np.linalg.norm(e1)
 		e2 = np.cross(ru,e1)
-		#theta = 2.0*pi*np.random.rand()
-		#vr = ru*sign[np.random.randint(2)] 
-		#vt = (e1*cos(theta) + e2*sin(theta))
-		vr = ru*sign[rbit[unitv.i]] 
+		vr = ru*sign[rbit[unitv.i]]
 		vt = (e1*ctheta[unitv.i] + e2*stheta[unitv.i])
 		unitv.i += 1
 		return vr,vt
@@ -192,21 +119,21 @@ if args.q != 0 	or args.ra != 0 or args.e:
 
 #anisotropoic plummer Dejonghe
 if args.q != 0:
-	assert args.q <= +2, " q value needs to be in range (-inf,+2) " 
+	assert args.q <= +2, " q value needs to be in range (-inf,+2) "
 	#
 	# Define distribution function as in Dejonghe (1987)
 	#
 	# sci.gamma(a+b) replaced with 1.0 as cancels with sci.gamma(0.5*q) in Fq
-	# for x <= 1, sci.gamma(a+d) = 1 
-	# cost1 coeff for x=<1, cost2 coeff for x>1 
-	cost1 = 1.0/( sci.gamma(4.5-args.q)) 
+	# for x <= 1, sci.gamma(a+d) = 1
+	# cost1 coeff for x=<1, cost2 coeff for x>1
+	cost1 = 1.0/( sci.gamma(4.5-args.q))
 	cost2 = 1.0/( sci.gamma(1.0-0.5*args.q) * sci.gamma(4.5-0.5*args.q))
 
-	def H(a, b, c, d, x ):	
+	def H(a, b, c, d, x ):
 		if x  <= 1:
 			return cost1*(x**a)*sci.hyp2f1(a+b, 1+a-c, a+d, x)
 		else:
-			y = 1.0 / x 
+			y = 1.0 / x
 			return cost2*(y**b)*sci.hyp2f1(a+b, 1+b-d, b+c, y)
 
 	#remove factor sci.gamma(0.5*q) cancels with term in H
@@ -227,22 +154,22 @@ if args.q != 0:
 				continue
 			for jv in np.arange(0,vmax,incr):
 				if ( jv > ev ): #not realisitc
-					continue 	
+					continue
 				L=jv*r
-				val = Fq(E,L)*jv			
+				val = Fq(E,L)*jv
 				if (maxfq < val):
 					maxfq = val
-		return sf*maxfq 
-	
+		return sf*maxfq
+
 	psirange = np.linspace(0.000, 1.000, num=100, endpoint=True)
-	maxfqarray = np.zeros(len(psirange))	
+	maxfqarray = np.zeros(len(psirange))
 	for i,psi in enumerate(psirange) :
 		if psi == 0.0:
 			maxfqarray[i] = 0.0
 			continue
 		ri = sqrt((1.0/psi)**2.0-1.0)
 		maxfqarray[i] = maxfq(psi,ri)
-	
+
 	# linear interpolation function to calculate bound
 	psimax = interp1d(psirange, maxfqarray)
 
@@ -251,7 +178,7 @@ if args.q != 0:
 	psi = np.reciprocal(np.sqrt(r2 + 1.0))
 	fmaxv = psimax(psi)
 	vmax = np.sqrt(2.0*psi)
-	v = np.zeros(args.n)	
+	v = np.zeros(args.n)
 	rvf =  np.random.rand(int(round(50*args.n)))
 	rvc = 0
 	for i in xrange(args.n):
@@ -261,20 +188,20 @@ if args.q != 0:
 			#rv =  np.random.rand(3)
 			vr =  rvf[rvc+0]*vmax[i]
 			vt =  rvf[rvc+1]*vmax[i]
-			l = r[i]*vt 
+			l = r[i]*vt
 			vsq = vr**2 + vt**2
 			E =  psi[i] - 0.5*vsq
 
 			if E < 0:
 				rvc+=2
-				continue			
+				continue
 
 			f1 =  rvf[rvc+2]*fmax
 			f = Fq(E,l)*vt
 
 			rvc += 3
-			
-			if f >= f1:  
+
+			if f >= f1:
 			#	print i,loopc
 				vrv,vtv = unitv(w[i,1:4])
 				w[i,4:] = vrv*vr+vtv*vt
@@ -282,19 +209,19 @@ if args.q != 0:
 
 			if rvc + 4 >= len(rvf):
 				rvf = np.random.rand(int(round(50*args.n)))
-				rvc = 0		
+				rvc = 0
 
 			loopc += 1
 			if loopc > 100000:
-				print(r[i], fmax, E, l) 
+				print(r[i], fmax, E, l)
 				raise NameError('Failed to sample')
 
 	#print float(rvc)/float(len(rvf)),rvc,len(rvf),i
 
-			
+
 # anisotropoic plummer Osipkov-Merritt radial only Osipkov 1979; Merritt 1985
 elif  args.ra != 0:
-	assert args.ra >= +0.75, " ra value needs to be in range (+0.75,+inf) " 
+	assert args.ra >= +0.75, " ra value needs to be in range (+0.75,+inf) "
 	def df(psi,r,vr,vt):
 		E = psi - 0.5*(vr**2+vt**2)
 		if E < 0:
@@ -305,7 +232,7 @@ elif  args.ra != 0:
 		sig0 = 1.0/6.0
 		fi = (sqrt(2.0)/(378.0*(pi**3)*sqrt(sig0)))*((-q/sig0)**(7.0/2.0))*( 1.0-(args.ra**-2)+(63.0/4.0)*(args.ra**-2)*(-q/sig0)**(-2))
 
-		assert fi >= 0, " DF negative! {0} r={1} vr,vt={2},{3} E,q={4},{5}".format(fi,r,vr,vt,E,q)		
+		assert fi >= 0, " DF negative! {0} r={1} vr,vt={2},{3} E,q={4},{5}".format(fi,r,vr,vt,E,q)
 		return fi
 
 	sf = 1.1 	# increase fmax found on grid by sf
@@ -320,22 +247,22 @@ elif  args.ra != 0:
 				continue
 			for jv in np.arange(0,vmax,incr):
 				if ( jv > ev ): #not realisitc
-					continue 	
+					continue
 				L=jv*r
-				val = df(psi,r,ev,jv)*jv			
+				val = df(psi,r,ev,jv)*jv
 				if (maxfq < val):
 					maxfq = val
-		return sf*maxfq 
-	
+		return sf*maxfq
+
 	psirange = np.linspace(0.000, 1.000, num=100, endpoint=True)
-	maxfqarray = np.zeros(len(psirange))	
+	maxfqarray = np.zeros(len(psirange))
 	for i,psi in enumerate(psirange) :
 		if psi == 0.0:
 			maxfqarray[i] = 0.0
 			continue
 		ri = sqrt((1.0/psi)**2.0-1.0)
 		maxfqarray[i] = maxfq(psi,ri)
-	
+
 	# linear interpolation function to calculate bound
 	psimax = interp1d(psirange, maxfqarray)
 
@@ -344,7 +271,7 @@ elif  args.ra != 0:
 	psi = np.reciprocal(np.sqrt(r2 + 1.0))
 	fmaxv = psimax(psi)
 	vmax = np.sqrt(2.0*psi)
-	v = np.zeros(args.n)	
+	v = np.zeros(args.n)
 	rvf =  np.random.rand(int(round(40*args.n)))
 	rvc = 0
 	for i in xrange(args.n):
@@ -354,24 +281,24 @@ elif  args.ra != 0:
 			rvc+=3
 			vr = rvf[rvc]*vmax[i]
 			vt = rvf[rvc+1]*vmax[i]
-			l = r[i]*vt 
+			l = r[i]*vt
 			vsq = vr**2 + vt**2
 			E =  psi[i] - 0.5*vsq
 
 			if E < 0:
 				continue
-			
+
 			f1 =  rvf[rvc+2]*fmax
 			f = df(psi[i],r[i],vr,vt)*vt
 
-			if f >= f1:  
-				# vrv,vtv random vr vt unit vectors 
+			if f >= f1:
+				# vrv,vtv random vr vt unit vectors
 				vrv,vtv = unitv(w[i,1:4])
 				w[i,4:] = vrv*vr+vtv*vt
 				break
 			loopc += 1
 			if loopc > 10000:
-				print(r[i], fmax, E, l) 
+				print(r[i], fmax, E, l)
 				raise NameError('Failed to sample')
 	#print float(rvc)/float(len(rvf))
 
@@ -382,77 +309,20 @@ elif args.e:
 
 	for i in xrange(args.n):
 		# create unit vectors e1,e2 in plane normal to r
-		# assuming ri[0], ri[1] non-zero 
+		# assuming ri[0], ri[1] non-zero
 		vr,vt = unitv(w[i,1:4])
 		w[i,4:] = vt*v[i]
 
-	
-#isotropoic plummer 
+
+#isotropic plummer
 else:
-	r2 = np.power(r,2)
-	vmax = np.sqrt(2.0*np.reciprocal(np.sqrt(r2 + 1.0)))
-	v = np.zeros(args.n)
-	for i in xrange(args.n):
-		while True:
-			xi = np.random.rand(2)
-			f1 =  xi[1]*0.1
-			f = xi[0]*xi[0]*(1.0 - xi[0]*xi[0])**3.5
-			if f >=  f1:
-				break
-		v[i] = vmax[i]*xi[0]
+    isotropic_velocities(r,w,args)
 
-	ctheta = 2.0*np.random.rand(args.n)-1.0
-	stheta = np.sin(np.arccos(ctheta))
-	phi = 2.0*pi*np.random.rand(args.n) 
-
-	w[:,4] = stheta*np.cos(phi)
-	w[:,5] = stheta*np.sin(phi)
-	w[:,6] = ctheta
-
-	w[:,4:] = w[:,4:]*v[:,None]
 
 #----------------- quiet start --------
 if args.qt > 1:
+    w = quiet_start(w,args)
 
-	# ref https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula
-	def rotation_matrix(axis, theta):
-		axis = np.asarray(axis)
-		axis = axis / sqrt(np.dot(axis, axis))
-		a = cos(theta / 2.0)
-		b, c, d = -axis * sin(theta / 2.0)
-		aa, bb, cc, dd = a * a, b * b, c * c, d * d
-		bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
-		return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
-	
-	qtl = [w]
-	
-	for i in range(1,args.qt):
-		wi = np.zeros_like(w)
-		wi[:,0] = w[:,0]
-		qtl.append(wi)
-	
-	for j in range(args.n):
-		ri = w[j,1:4]
-		vi = w[j,4:]
-		L = np.cross(ri,vi)
-		for i in range(1,args.qt):
-			angi = i*2.*pi/args.qt
-			rotmat = rotation_matrix(L, angi)
-			wi = qtl[i]
-			wi[j,1:4] = np.dot(rotmat, ri)
-			wi[j,4:] = np.dot(rotmat, vi)
-			#print(wi[i,1:4],wi[i,4:])
-			#print(w[i,1:4],w[i,4:])
-			#print(qtl[i][-1],wi[-1])
-			#exit()
-			#print(qtl[i][-1],wi[-1])
-
-	args.n = args.n*args.qt
-	w = np.concatenate(qtl)
-	#print(w[-1])
-	
 
 #---------------------------------add rotation------------------------------------
 
@@ -462,12 +332,12 @@ if args.lcut[0] >= 0.0:
 
 	L = np.cross(w[:,1:4],w[:,4:])
 
-	for i in xrange(args.n):	
-		
+	for i in xrange(args.n):
+
 		crit = abs(L[i,2]/np.linalg.norm(L[i,:]))
-		
+
 		if L[i,2] < 0.0 and crit < args.lcut[0]:
-			
+
 			if args.lcut[1] >= np.random.rand():
 				w[i,4:] *= -1.0
 				countflip+=1
@@ -483,12 +353,12 @@ elif args.icut[0] >= 0.0:
 
 	L = np.cross(w[:,1:4],w[:,4:])
 
-	for i in xrange(args.n):	
-		
+	for i in xrange(args.n):
+
 		crit = acos(abs(L[i,2]/np.linalg.norm(L[i,:])))/(pi/2.)
-		
+
 		if L[i,2] < 0.0 and crit < args.icut[0]:
-			
+
 			if args.icut[1] >= np.random.rand():
 				w[i,4:] *= -1.0
 				countflip+=1
@@ -503,7 +373,7 @@ elif args.icut[0] >= 0.0:
 
 
 elif args.oa[2] >= 0.0:
-	# general trick energy cut and 
+	# general trick energy cut and
 	v2 = np.sum(np.power(w[:,4:],2.0),axis=1)
 	E = 0.5*v2 - np.reciprocal(np.sqrt(np.power(r,2.0) + 1.0))
 	#E = np.sort(E)
@@ -519,9 +389,9 @@ elif args.oa[2] >= 0.0:
 #if args.oa[0] > 0:
 	theta = pi*args.oa[0]/180.0
 	ov = np.array([0.0,sin(theta),cos(theta)])
-	L = np.cross(w[:,1:4],w[:,4:])	
-	
-	for i in xrange(args.n):	
+	L = np.cross(w[:,1:4],w[:,4:])
+
+	for i in xrange(args.n):
 		if L[i,2] < 0.0 and E[i] < ecut:
 			if args.a >= np.random.rand():
 				w[i,4:] *= -1.0
@@ -531,7 +401,7 @@ elif args.oa[2] >= 0.0:
 				if args.oa[1] >= np.random.rand():
 					w[i,4:] *= -1.0
 					countflip+=1
-		
+
 
 elif args.hs != 0.0:
 	v2 = np.sum(np.power(w[:,4:],2.0),axis=1)
@@ -539,10 +409,10 @@ elif args.hs != 0.0:
 	L = np.cross(w[:,1:4],w[:,4:])
 
 	# calculation for Lz = 0 high shear models, no long used
-	#Lz = abs(L[:,2])	
+	#Lz = abs(L[:,2])
 	#Lztot = sum(Lz)
 	#indx = sorted(range(args.n),key=lambda k: E[k])
-	#Lzc = 0.0	
+	#Lzc = 0.0
 	#for i in xrange(args.n):
 	#	pid = indx[i]
 	#	Lzc += Lz[pid]
@@ -552,7 +422,7 @@ elif args.hs != 0.0:
 	#print(ecut)
 	#exit()
 	ecut = -1.0*args.hs #pot(0)=1.0
-	
+
 	for i in xrange(args.n):
 		if L[i,2] < 0.0 and E[i] < ecut:
 			if args.a > np.random.rand():
@@ -563,12 +433,12 @@ elif args.hs != 0.0:
 			if args.a > np.random.rand():
 				w[i,4:] *= -1.0
 				countflip+=1
-	
+
 elif args.a > 0:
-	#basic LB trick 
+	#basic LB trick
 	countflip = 0
 	L = np.cross(w[:,1:4],w[:,4:])
-	for i in xrange(args.n):	
+	for i in xrange(args.n):
 		if L[i,2] < 0.0:
 			if args.a > np.random.rand():
 				w[i,4:] *= -1.0
@@ -586,46 +456,46 @@ if args.ms[0] > 0 and args.ms[1] > 0:
 	#fexit()
 	#E = np.sort(E)
 	#for i in range(len(E)):
-	#	if i % 1000:	
+	#	if i % 1000:
 	#		print(" {} {} ".format(float(i)/args.n,E[i]))
 	#exit()
 	ecut = np.percentile(E, 100.0*args.ms[0])
-		
+
 	nfold = args.ms[0]*args.n
-	nkeep  = int(round(nfold/args.ms[1]))	
+	nkeep  = int(round(nfold/args.ms[1]))
 	nc = 0
-	
+
 	rl = []
 	for i in xrange(args.n):
 		if E[i] < ecut:
-			nc+=1 
+			nc+=1
 			if nc<=nkeep:
 				w[i,0] *= args.ms[1]
 			else:
-				
+
 				rl.append(i)
 	print("\n Warning mass segregation particle number reduced n = {}!".format(args.n-len(rl)))
-		
+
 	w=np.delete(w,rl,axis=0)
 	# reset n and renormlise mass to account for round error
 	w[:,0] *= 1.0/sum(w[:,0])
 	args.n = args.n-len(rl)
 #
-	
+
 
 
 #--------------------------------scale to Henon units and save data--------------------------------
 
 # scale to henon units and save data to output file "fort.10" (use -o to rename output)
 if args.u == "HU":
-	lfact=(3.0*pi)/16.0		 
+	lfact=(3.0*pi)/16.0
 	vfact = 1.0/sqrt(lfact)
 	w[:,1:4] *= lfact
 	w[:,4:] *= vfact
 
 np.savetxt(args.o, w)
 
-# statistics 
+# statistics
 if args.e:
 	name = " Einstein sphere"
 elif args.ra > 0:
@@ -656,7 +526,7 @@ if args.ms[0] == 0:
 else:
 	r2 = np.sum(np.power(w[:,1:4],2), axis=1)
 	indx = sorted(range(args.n),key=lambda k: r2[k])
-	mc = 0.0 
+	mc = 0.0
 	for i in xrange(args.n):
 		mc += w[indx[i],0]
 		if mc >= 0.5:
@@ -665,9 +535,9 @@ else:
 
 print(" rh = {:.3e} K.E. = {:.3e} vt^2 = {:.3e} vr^2 = {:.3e} ".format(rh,0.5*(svt2+svr2) ,svt2,svr2))
 #print(" Ixx = {:.3e} Iyy = {:.3e} Izz = {:.3e}  ".format((w[:,1]**2).sum(),(w[:,2]**2).sum(),(w[:,3]**2).sum() ))
-# 
+#
 # crit val http://adsabs.harvard.edu/abs/1981SvA....25..533P
-# more recent 
+# more recent
 if True:
 #if not args.e:
 	print(" 1-0.5*<vt^2>/<vr^2> = {:.3e} ".format(1.0 - 0.5*svt2/svr2))
@@ -710,14 +580,14 @@ for rl in Rbins:
 	zbins = np.array_split(indxi,nbin)
 	#print R2[rl[0]],R2[rl[-1]]
 	for zl in zbins:
-		
+
 		#print "{:.2e}".format(zi[zl[-1]]),
 		vphiavg = np.sum(vphi[rl[zl]])
 		vsign = sign(vphiavg)
 		#mass = np.sum(w[rl[zl],0])
 		vphike += (vphiavg**2)/len(zl)
-		# note vphiavg  accutally (ns*vphiavg) 
-		# vphike = n*(vphiavg)**2 
+		# note vphiavg  accutally (ns*vphiavg)
+		# vphike = n*(vphiavg)**2
 		# divide by n before output
 	#print ""
 
@@ -729,12 +599,10 @@ if args.oa[2] >= 0.0:
 	print("De({:d},{:.2f},{:.3e}) {:.3e}".format(int(args.q),args.a,abs(1.+ecut),args.oa[2]) )
 
 #print command arguments
-commandstring = '\n ';  
-for arg in sys.argv:          
+commandstring = '\n ';
+for arg in sys.argv:
     if ' ' in arg:
-        commandstring+= '"{}"  '.format(arg) ;  
+        commandstring+= '"{}"  '.format(arg) ;
     else:
-        commandstring+="{}  ".format(arg) ;      
-print(commandstring+"\n"); 	
-
-
+        commandstring+="{}  ".format(arg) ;
+print(commandstring+"\n");
