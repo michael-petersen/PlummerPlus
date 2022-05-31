@@ -52,8 +52,18 @@ def parse_all_args():
     group.add_argument("-e", help=" Einstein sphere, plummer model with only circular orbits ",
                         action="store_true")
 
+    parser.add_argument("-v", help=" print output statistics ",
+                        action="store_true")
+
+    parser.add_argument("-z", help=" zero the position and velocity of the model ",
+                        action="store_true")
+
     parser.add_argument("-qt", help="Quiet start, place replicas of particles at 2*pi/qt intervals in plane of orbit, see Sellwood 1997",
                         type=int,default=0,metavar="")
+
+    output = parser.add_mutually_exclusive_group()
+    output.add_argument("-bods", help=" Output for EXP body file ",
+                        action="store_true")
 
     args = parser.parse_args()
 
