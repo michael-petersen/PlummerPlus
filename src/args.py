@@ -17,11 +17,11 @@ def parse_all_args():
     parser.add_argument("-rcut", help="outer cutoff radius",
                         type=float,default=-1.0,metavar="")
 
-    parser.add_argument("-o", help="name of output file (default: \"fort.10\")",
-                        type=str,default="fort.10",metavar="")
+    parser.add_argument("-o", help="name of output file (default: \"output.txt\")",
+                        type=str,default="output.txt",metavar="")
 
-    parser.add_argument("-u", help="units (default: \"Henon units\")",
-                        type=str,default="HU",metavar="")
+    parser.add_argument("-u", help="units (default: \"system units\")",
+                        type=str,default="X",metavar="")
 
     # rotation parameters
     parser.add_argument("-a", help="Lynden-Bell trick flip fraction",

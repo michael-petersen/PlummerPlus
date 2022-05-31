@@ -11,36 +11,11 @@
 # LICENSE:	MIT, This program is comes with ABSOLUTELY NO WARRANTY.
 #
 #
-# CITATION: Please use Breen, Varri, Heggie 2018 (https://arxiv.org/abs/)
+# CITATION: Please use Breen, Varri, Heggie 2017 (https://ui.adsabs.harvard.edu/abs/2017MNRAS.471.2778B/abstract)
 #
 # EXAMPLES:
 #       use "chmod a+x PlummerPlus.py" to make script executable, alternativaly use "python PlummerPlus.py ...."
 #
-# 	isotropic plummmer with 8K particles
-#	./PlummerPlus.py -n 8192
-#
-#	8k anisotropic plummer with Dejonghe with q=-2 (see http://adsabs.harvard.edu/full/1987MNRAS.224...13D)
-#	./PlummerPlus.py -n 8192 -q -2
-#
-# 	8k Osipkov-Merritt  radially anisotropic plummer with anisotropic radius ra=1.0 (see e.g. merritt, d. 1985. aj, 90, 1027)
-#	./PlummerPlus.py -n 8192 -ra 1.0
-#
-#	8k Einstien shpere i.e. plummer model with only ciruclar orbits
-#	./PlummerPlus.py -n 8192 -e
-#
-#	8K isotropic plummmer with rotation via Lyden-Bell trick i.e. reverse velocities of 50% particles with L_z < 0
-#       ./PlummerPlus.py -n 8192 -a 0.5
-#
-#	8K isotropic plummmer with offset rotation, 50% of the most bound stars rotating about z-axis
-# 	least bound 50% rotating is offset by 90 degres (i.e. about y-axis).
-#       Note most stars use -a for the fraction of stars reverse where as least bount stars use second value in -oa flag (i.e. -oa angle flipfraction)
-#       ./PlummerPlus.py -n 8192 -a 1.0  -oa 90.0 1.0 0.5
-#
-# 	for a high shear model, set offset to 180 degree (i.e. -z) and used mass fraction 0.67 (i.e. rotatin model with 0 net L!)
-# 	./PlummerPlus.py -n 10000  -a 1.0 -oa 180.0 1.0 0.67
-#
-#	create mass segrated model most bound 50% of the mass consisting of particles 10.0 times more massive then the least
-#	./PlummerPlus.py -n 10000 -ms 0.5 10.0
 #
 """ PlummerPlus.py: generates realisation of anisotropic and rotating models with plummer model density distribution """
 
