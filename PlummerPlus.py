@@ -93,7 +93,12 @@ if args.q != 0 	or args.ra != 0 or args.e:
 	unitv.i = 0
 
 
-#anisotropoic plummer Dejonghe
+
+"""
+In the anisotropic case, the magnitudes of the tangential and radial velocities (vt,vr) must be sampled from a joint probability distribution \propto f(r,vt,vr)vt. For acceptance-rejection sampling, a bound on the maximum value of the f(r,vt,vr)vt has to be known at each radius. This is calculated numerically in advance of sampling on a radial grid. During sampling, the bound a a particular r is calculated by interpolation. This technique is similar to Aarset, Hénon & Wielen (1974).
+
+"""
+#anisotropic plummer Dejonghe
 if args.q != 0:
 	assert args.q <= +2, " q value needs to be in range (-inf,+2) "
 	#
@@ -200,6 +205,8 @@ if args.q != 0:
 # anisotropoic plummer Osipkov-Merritt radial only Osipkov 1979; Merritt 1985
 elif  args.ra != 0:
 	assert args.ra >= +0.75, " ra value needs to be in range (+0.75,+inf) "
+
+    # pretabulate the DF
 	def df(psi,r,vr,vt):
 		E = psi - 0.5*(vr**2+vt**2)
 		if E < 0:
@@ -216,6 +223,7 @@ elif  args.ra != 0:
 	sf = 1.1 	# increase fmax found on grid by sf
 	steps = 100.0 	# step size in velocity space vmax/steps
 	def maxfq(psi,r):
+        """find the maximum of the DF at each radius"""
 		maxfq = 0.0
 		vmax = sqrt(2.0*psi)
 		incr = vmax/steps
@@ -232,6 +240,7 @@ elif  args.ra != 0:
 					maxfq = val
 		return sf*maxfq
 
+    # define the table for psi, from (0->1)
 	psirange = np.linspace(0.000, 1.000, num=100, endpoint=True)
 	maxfqarray = np.zeros(len(psirange))
 	for i,psi in enumerate(psirange) :

@@ -2,11 +2,16 @@ import numpy as np
 
 
 def isotropic_velocities(r,w,args):
+    """in the isotropic case, the magnitude of the velocity is sampled from a one-dimensional distribution \propto f(r,v)v^2.
+
+    here, the dimensionless value f(r,v) = (1-xi^2)^(7/2) with xi=v
+
+    """
 
     # for each realised radius, make the square
     r2 = np.power(r,2)
 
-    # compute the maximum velocity for each radius
+    # compute the maximum velocity at each radius
     vmax = np.sqrt(2.0*np.reciprocal(np.sqrt(r2 + 1.0)))
 
     # loop through all particles
