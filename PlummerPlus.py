@@ -31,6 +31,7 @@ from src.args import *
 from src.positions import *
 from src.velocities import *
 from src.statistics import *
+from src.osipkovmerritt import *
 
 args = parse_all_args()
 
@@ -125,7 +126,7 @@ if args.q != 0:
 
 	sf = 1.1 	# increase fmax found on grid by sf
 	steps = 100.0 	# step size in velocity space vmax/steps
-	def maxfq(psi,r):
+	def DJ_maxfq(psi,r):
 		maxfq = 0.0
 		vmax = sqrt(2.0*psi)
 		incr = vmax/steps
@@ -149,7 +150,7 @@ if args.q != 0:
 			maxfqarray[i] = 0.0
 			continue
 		ri = sqrt((1.0/psi)**2.0-1.0)
-		maxfqarray[i] = maxfq(psi,ri)
+		maxfqarray[i] = DJ_maxfq(psi,ri)
 
 	# linear interpolation function to calculate bound
 	psimax = interp1d(psirange, maxfqarray)
@@ -206,40 +207,6 @@ if args.q != 0:
 elif  args.ra != 0:
 	assert args.ra >= +0.75, " ra value needs to be in range (+0.75,+inf) "
 
-    # pretabulate the DF
-	def df(psi,r,vr,vt):
-		E = psi - 0.5*(vr**2+vt**2)
-		if E < 0:
-			return 0.0
-		q = -E + (r**2.0)*(vt**2.0)/(2.0*args.ra**2)
-		if q >= 0:
-			return 0.0
-		sig0 = 1.0/6.0
-		fi = (sqrt(2.0)/(378.0*(pi**3)*sqrt(sig0)))*((-q/sig0)**(7.0/2.0))*( 1.0-(args.ra**-2)+(63.0/4.0)*(args.ra**-2)*(-q/sig0)**(-2))
-
-		assert fi >= 0, " DF negative! {0} r={1} vr,vt={2},{3} E,q={4},{5}".format(fi,r,vr,vt,E,q)
-		return fi
-
-	sf = 1.1 	# increase fmax found on grid by sf
-	steps = 100.0 	# step size in velocity space vmax/steps
-	def maxfq(psi,r):
-        """find the maximum of the DF at each radius"""
-		maxfq = 0.0
-		vmax = sqrt(2.0*psi)
-		incr = vmax/steps
-		for ev in np.arange(0,vmax,incr):
-			E=psi-0.5*ev**2
-			if E <= 0 and abs(E) < 1e-15:
-				continue
-			for jv in np.arange(0,vmax,incr):
-				if ( jv > ev ): #not realisitc
-					continue
-				L=jv*r
-				val = df(psi,r,ev,jv)*jv
-				if (maxfq < val):
-					maxfq = val
-		return sf*maxfq
-
     # define the table for psi, from (0->1)
 	psirange = np.linspace(0.000, 1.000, num=100, endpoint=True)
 	maxfqarray = np.zeros(len(psirange))
@@ -248,17 +215,21 @@ elif  args.ra != 0:
 			maxfqarray[i] = 0.0
 			continue
 		ri = sqrt((1.0/psi)**2.0-1.0)
-		maxfqarray[i] = maxfq(psi,ri)
+		maxfqarray[i] = OM_maxfq(psi,ri,args.ra)
 
 	# linear interpolation function to calculate bound
 	psimax = interp1d(psirange, maxfqarray)
 
 	# accept reject sampling
 	r2 = np.power(r,2)
+
+    # draw the potential value from the cumulative potential function
 	psi = np.reciprocal(np.sqrt(r2 + 1.0))
 	fmaxv = psimax(psi)
 	vmax = np.sqrt(2.0*psi)
 	v = np.zeros(args.n)
+
+    # select 40x the desired number of particles
 	rvf =  np.random.rand(int(round(40*args.n)))
 	rvc = 0
 	for i in xrange(args.n):
@@ -275,11 +246,12 @@ elif  args.ra != 0:
 			if E < 0:
 				continue
 
+            # scale to the appropriate boundary
 			f1 =  rvf[rvc+2]*fmax
-			f = df(psi[i],r[i],vr,vt)*vt
+			f = OM_df(psi[i],r[i],vr,vt)*vt
 
 			if f >= f1:
-				# vrv,vtv random vr vt unit vectors
+				# vrv,vtv create random vr vt unit vectors
 				vrv,vtv = unitv(w[i,1:4])
 				w[i,4:] = vrv*vr+vtv*vt
 				break
