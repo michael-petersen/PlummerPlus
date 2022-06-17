@@ -3,7 +3,7 @@
 import numpy as np
 
 def OM_df(psi,r,vr,vt,ra):
-    """# pretabulate the DF"""
+	"""# pretabulate the DF"""
 	E = psi - 0.5*(vr**2+vt**2)
 	if E < 0:
 		return 0.0
@@ -11,7 +11,7 @@ def OM_df(psi,r,vr,vt,ra):
 	if q >= 0:
 		return 0.0
 
-    # Plummer central velocity dispersion (scalar)
+	# Plummer central velocity dispersion (scalar)
 	sig0 = 1.0/6.0
 
 	fi = (sqrt(2.0)/(378.0*(pi**3)*sqrt(sig0)))*((-q/sig0)**(7.0/2.0))*( 1.0-(ra**-2)+(63.0/4.0)*(ra**-2)*(-q/sig0)**(-2))
@@ -23,12 +23,12 @@ def OM_df(psi,r,vr,vt,ra):
 
 
 def OM_maxfq(psi,r,ra,sf=1.1,steps=100.):
-    """find the maximum of the DF at each radius
+	"""find the maximum of the DF at each radius
 
-    sf = 1.1 	# increase fmax found on grid by sf
-    steps = 100.0 	# step size in velocity space vmax/steps
+	sf = 1.1 	# increase fmax found on grid by sf
+	steps = 100.0 	# step size in velocity space vmax/steps
 
-    """
+	"""
 	maxfq = 0.0
 	vmax = sqrt(2.0*psi)
 	incr = vmax/steps
