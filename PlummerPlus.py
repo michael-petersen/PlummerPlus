@@ -32,6 +32,7 @@ from src.positions import *
 from src.velocities import *
 from src.statistics import *
 from src.osipkovmerritt import *
+from src.lflip import *
 
 args = parse_all_args()
 
@@ -289,45 +290,12 @@ countflip = 0
 
 if args.lcut[0] >= 0.0:
 
-	L = np.cross(w[:,1:4],w[:,4:])
-
-	for i in xrange(args.n):
-
-		crit = abs(L[i,2]/np.linalg.norm(L[i,:]))
-
-		if L[i,2] < 0.0 and crit < args.lcut[0]:
-
-			if args.lcut[1] >= np.random.rand():
-				w[i,4:] *= -1.0
-				countflip+=1
-
-		if L[i,2] < 0.0 and crit > args.lcut[0]:
-
-			if args.lcut[2] >= np.random.rand():
-				w[i,4:] *= -1.0
-				countflip+=1
+    w,countflip = flip_lcut(w,args.lcut,countflip)
 
 
 elif args.icut[0] >= 0.0:
 
-	L = np.cross(w[:,1:4],w[:,4:])
-
-	for i in xrange(args.n):
-
-		crit = acos(abs(L[i,2]/np.linalg.norm(L[i,:])))/(pi/2.)
-
-		if L[i,2] < 0.0 and crit < args.icut[0]:
-
-			if args.icut[1] >= np.random.rand():
-				w[i,4:] *= -1.0
-				countflip+=1
-
-		if L[i,2] < 0.0 and crit > args.icut[0]:
-
-			if args.icut[2] >= np.random.rand():
-				w[i,4:] *= -1.0
-				countflip+=1
-
+    w,countflip = flip_icut(w,args.icut,countflip)
 
 
 
@@ -394,7 +362,7 @@ elif args.hs != 0.0:
 				countflip+=1
 
 elif args.a > 0:
-	#basic LB trick
+	# basic LB trick
 	countflip = 0
 	L = np.cross(w[:,1:4],w[:,4:])
 	for i in xrange(args.n):

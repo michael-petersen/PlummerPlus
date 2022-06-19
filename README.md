@@ -35,12 +35,12 @@ A laundry list of examples:
 	./PlummerPlus.py -n 8192 -e
 
 #	8K isotropic plummmer with rotation via Lynden-Bell trick i.e. reverse velocities of 50% particles with L_z < 0
-       ./PlummerPlus.py -n 8192 -a 0.5
+  ./PlummerPlus.py -n 8192 -a 0.5
 
 #	8K isotropic plummmer with offset rotation, 50% of the most bound stars rotating about z-axis
 # 	least bound 50% rotating is offset by 90 degrees (i.e. about y-axis).
 #       Note most stars use -a for the fraction of stars reverse where as least bound stars use second value in -oa flag (i.e. -oa angle flipfraction)
-       ./PlummerPlus.py -n 8192 -a 1.0  -oa 90.0 1.0 0.5
+  ./PlummerPlus.py -n 8192 -a 1.0  -oa 90.0 1.0 0.5
 
 # 	for a high shear model, set offset to 180 degree (i.e. -z) and used mass fraction 0.67 (i.e. rotation model with 0 net L!)
 	./PlummerPlus.py -n 10000  -a 1.0 -oa 180.0 1.0 0.67
