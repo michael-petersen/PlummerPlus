@@ -26,17 +26,18 @@ from scipy.interpolate import interp1d
 from math import pi, sqrt, cos, sin, acos
 
 # local imports
-from src.quiet import *
-from src.args import *
-from src.positions import *
-from src.velocities import *
-from src.statistics import *
+from src.quiet          import *
+from src.args           import *
+from src.positions      import *
+from src.velocities     import *
+from src.statistics     import *
 from src.osipkovmerritt import *
-from src.lflip import *
+from src.lflip          import *
 
+# parse the input arguments
 args = parse_all_args()
 
-#-------- Python3 compatibility
+#-------- Python3 compatibility: to be deprecated
 try:
     xrange
 except NameError:
@@ -46,8 +47,10 @@ except NameError:
 # set the random number seed
 np.random.seed(args.rs)
 
+# I don't think we need this feature anymore. Plan to deprecate.
 if args.nk > 0:
-	args.n = 1024*args.nk
+    print("PlummerPlus: -nk will soon be deprecated, please default to using -n.")
+    args.n = 1024*args.nk
 
 
 # the workhorse here is the matrix w, which is
@@ -74,19 +77,30 @@ w,r = generate_positions(args,w)
 
 
 #---------------------------------generate velocities------------------------------------
+# many different options here!
 
-#calucates orthogonal basis using r and returns random vr,vt units (needed for anisotropic models)
+#calculates orthogonal basis using r and returns random vr,vt units (needed for anisotropic models)
 if args.q != 0 	or args.ra != 0 or args.e:
 	sign = [-1.0,1.0]
+
+    # create random azimuthal angle
 	theta = 2.0*pi*np.random.rand(args.n)
 	ctheta = np.cos(theta)
 	stheta = np.sin(theta)
+
 	rbit = np.random.randint(2, size=args.n)
 	ui = 0
+
+    # create a unit vector based on 3d position
 	def unitv(ri):
+        # normalise
 		ru = ri/np.linalg.norm(ri)
+
+        # define first vector and normalise
 		e1 = [ri[1],-ri[0],0.0]
 		e1 /= np.linalg.norm(e1)
+
+        # define an orthogonal vector
 		e2 = np.cross(ru,e1)
 		vr = ru*sign[rbit[unitv.i]]
 		vt = (e1*ctheta[unitv.i] + e2*stheta[unitv.i])
@@ -361,16 +375,31 @@ elif args.hs != 0.0:
 				w[i,4:] *= -1.0
 				countflip+=1
 
-elif args.a > 0:
-	# basic LB trick
-	countflip = 0
-	L = np.cross(w[:,1:4],w[:,4:])
-	for i in xrange(args.n):
-		if L[i,2] < 0.0:
-			if args.a > np.random.rand():
-				w[i,4:] *= -1.0
-				countflip += 1
+elif args.a != 0:
+    # basic LB trick: the primary workhorse
+    countflip = 0
 
+    # compute angular momentum for all particles
+    L = np.cross(w[:,1:4],w[:,4:])
+
+    # loop through particles and flip with some probability
+    for i in xrange(args.n):
+
+        # make positive spin
+        if args.a > 0:
+            if L[i,2] < 0.0:
+                if args.a > np.random.rand():
+                    w[i,4:] *= -1.0
+                    countflip += 1
+
+        # make negative spin
+        else:
+            if L[i,2] > 0.0:
+                if np.abs(args.a) > np.random.rand():
+                    w[i,4:] *= -1.0
+                    countflip += 1
+
+    print("Adding rotation. Countflip={}.".format(countflip))
 
 #-----------------------------handle mass segregation---
 
