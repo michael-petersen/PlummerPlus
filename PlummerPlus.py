@@ -263,7 +263,7 @@ elif  args.ra != 0:
 
             # scale to the appropriate boundary
 			f1 =  rvf[rvc+2]*fmax
-			f = OM_df(psi[i],r[i],vr,vt)*vt
+			f = OM_df(psi[i],r[i],vr,vt,args.ra)*vt
 
 			if f >= f1:
 				# vrv,vtv create random vr vt unit vectors

@@ -14,7 +14,7 @@ def OM_df(psi,r,vr,vt,ra):
 	# Plummer central velocity dispersion (scalar)
 	sig0 = 1.0/6.0
 
-	fi = (sqrt(2.0)/(378.0*(pi**3)*sqrt(sig0)))*((-q/sig0)**(7.0/2.0))*( 1.0-(ra**-2)+(63.0/4.0)*(ra**-2)*(-q/sig0)**(-2))
+	fi = (np.sqrt(2.0)/(378.0*(np.pi**3)*np.sqrt(sig0)))*((-q/sig0)**(7.0/2.0))*( 1.0-(ra**-2)+(63.0/4.0)*(ra**-2)*(-q/sig0)**(-2))
 
 	assert fi >= 0, " DF negative! {0} r={1} vr,vt={2},{3} E,q={4},{5}".format(fi,r,vr,vt,E,q)
 
@@ -30,7 +30,7 @@ def OM_maxfq(psi,r,ra,sf=1.1,steps=100.):
 
 	"""
 	maxfq = 0.0
-	vmax = sqrt(2.0*psi)
+	vmax = np.sqrt(2.0*psi)
 	incr = vmax/steps
 	for ev in np.arange(0,vmax,incr):
 		E=psi-0.5*ev**2
