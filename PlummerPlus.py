@@ -401,7 +401,7 @@ elif args.a != 0:
 
     print("Adding rotation. Countflip={}.".format(countflip))
 
-#-----------------------------handle mass segregation---
+#-----------------------------handle mass segregation-----------------------
 
 if args.ms[0] > 0 and args.ms[1] > 0:
 
@@ -440,30 +440,39 @@ if args.ms[0] > 0 and args.ms[1] > 0:
 
 
 
-#--------------------------------scale to Henon units and save data--------------------------------
+#--------------------------------scale to Henon units--------------------------------
 
-# scale to henon units and save data to output file "fort.10" (use -o to rename output)
+# scale to henon units?
 if args.u == "HU":
 	lfact=(3.0*pi)/16.0
 	vfact = 1.0/sqrt(lfact)
 	w[:,1:4] *= lfact
 	w[:,4:] *= vfact
 
+
+#--------------------------------mean-centre units--------------------------------
+
 # apply zeroing?
 if args.z:
     for i in range(1,7):
         w[:,i] -= np.nanmean(w[:,i])
 
+
+#-------------------------------------save data--------------------------------
+
 # print the output file... we can almost certainly improve this.
+# save data to output file "output.txt" (use -o to rename output)
+
+# this version writes for EXP
 if args.bods:
     with open(args.o, 'w') as f:
         print('{} 0 0'.format(args.n),file=f)
         for i in range(0,args.n):
             print(w[i,0],w[i,1],w[i,2],w[i,3],w[i,4],w[i,5],w[i,6],file=f)
 
+# this version writes for NBODY6++
 else:
     np.savetxt(args.o, w)
-
 
 
 # report statistics?
