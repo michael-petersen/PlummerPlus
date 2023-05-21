@@ -1,3 +1,8 @@
+"""
+Implement the quiet start realisation
+
+"""
+
 
 import numpy as np
 

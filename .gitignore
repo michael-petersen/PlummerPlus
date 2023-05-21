@@ -5,3 +5,6 @@ src/__pycache__
 # the default output file
 fort.10
 output*.txt
+
+# ignore generated body files
+*.bods

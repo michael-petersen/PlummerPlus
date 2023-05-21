@@ -31,3 +31,27 @@ def generate_positions(args,w):
     w[:,1:4] = w[:,1:4]*r[:,None]
 
     return w,r
+
+
+
+def unitv(ri,rbit,theta):
+    """
+    create a unit vector based on 3d position
+    """
+    sign = [-1.0,1.0]
+    ctheta = np.cos(theta)
+    stheta = np.sin(theta)
+
+    # normalise
+    ru = ri/np.linalg.norm(ri)
+
+    # define first vector and normalise
+    e1 = [ri[1],-ri[0],0.0]
+    e1 /= np.linalg.norm(e1)
+
+    # define an orthogonal vector
+    e2 = np.cross(ru,e1)
+    vr = ru*sign[rbit[unitv.i]]
+    vt = (e1*ctheta[unitv.i] + e2*stheta[unitv.i])
+    unitv.i += 1
+    return vr,vt
