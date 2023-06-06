@@ -34,7 +34,7 @@ A laundry list of examples:
 # 8k Osipkov-Merritt  radially anisotropic plummer with anisotropic radius ra=1.0 (see e.g. merritt, d. 1985. aj, 90, 1027)
 ./PlummerPlus.py -n 8192 -ra 1.0
 
-#	8k Einstien shpere i.e. plummer model with only circular orbits
+#	8k Einstein shpere i.e. plummer model with only circular orbits
 ./PlummerPlus.py -n 8192 -e
 
 #	8K isotropic plummmer with rotation via Lynden-Bell trick i.e. reverse velocities of 50% particles with L_z < 0

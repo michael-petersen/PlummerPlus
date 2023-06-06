@@ -34,6 +34,7 @@ from src.statistics         import *
 
 from src.osipkovmerritt     import *
 from src.dejongheanisotropy import *
+from src.einstein           import *
 
 from src.lflip              import *
 
@@ -112,15 +113,7 @@ elif  args.ra != 0:
 
 #Einstein sphere
 elif args.e:
-	r2 = np.power(r,2)
-	v = np.sqrt( np.divide(r2, np.power( np.sqrt( r2+1.0 ),3.0 ) ))
-
-	for i in xrange(args.n):
-		# create unit vectors e1,e2 in plane normal to r
-		# assuming ri[0], ri[1] non-zero
-		vr,vt = unitv(w[i,1:4],rbit,theta)
-		w[i,4:] = vt*v[i]
-
+    w = generate_einstein_sphere(args,w,r,rbit,theta)
 
 #isotropic plummer
 else:
