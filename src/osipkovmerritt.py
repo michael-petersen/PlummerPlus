@@ -30,6 +30,8 @@ def OM_df(psi,r,vr,vt,ra):
 	# Plummer central velocity dispersion (scalar)
 	sig0 = 1.0/6.0
 
+    #                             is this ra supposed to be to the negative square?------|
+    #                                                                                    v
 	fi = (np.sqrt(2.0)/(378.0*(np.pi**3)*np.sqrt(sig0)))*((-q/sig0)**(7.0/2.0))*( 1.0-(ra**-2)+(63.0/4.0)*(ra**-2)*(-q/sig0)**(-2))
 
 	assert fi >= 0, " DF negative! {0} r={1} vr,vt={2},{3} E,q={4},{5}".format(fi,r,vr,vt,E,q)
