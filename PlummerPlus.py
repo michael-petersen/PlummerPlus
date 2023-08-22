@@ -37,6 +37,7 @@ from src.dejongheanisotropy import *
 from src.einstein           import *
 
 from src.lflip              import *
+from src.io                 import *
 
 # parse the input arguments
 args = parse_all_args()
@@ -290,17 +291,7 @@ if args.z:
 # print the output file... we can almost certainly improve this.
 # save data to output file "output.txt" (use -o to rename output)
 
-# this version writes for EXP
-if args.bods:
-    with open(args.o, 'w') as f:
-        print('{} 0 0'.format(args.n),file=f)
-        for i in range(0,args.n):
-            print(w[i,0],w[i,1],w[i,2],w[i,3],w[i,4],w[i,5],w[i,6],file=f)
-
-# this version writes for NBODY6++
-else:
-    np.savetxt(args.o, w)
-
+write_particles(w,args)
 
 # report statistics?
 if args.v:
