@@ -116,8 +116,14 @@ def generate_osipkov_merritt_radial_anisotropy(args,w,r,rbit,theta):
 				w[i,4:] = vrv*vr+vtv*vt
 				break
 			loopc += 1
-			if loopc > 10000:
-				print(r[i], fmax, E, l)
-				raise NameError('Failed to sample')
+
+            # guard for too many loops: should this be a controllable parameter?
+			if loopc > 20000:
+				print('Failed to sample for',r[i], fmax, E, l)
+				vrv,vtv = unitv(w[i,1:4],rbit,theta)
+				w[i,4:] = vrv*vr+vtv*vt
+				break
+                #raise NameError('Failed to sample')
+
 	#print float(rvc)/float(len(rvf))
 	return w

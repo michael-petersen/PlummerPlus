@@ -42,6 +42,8 @@ from src.io                 import *
 # parse the input arguments
 args = parse_all_args()
 
+print(args.init)
+
 #-------- Python3 compatibility: to be deprecated
 try:
     xrange
