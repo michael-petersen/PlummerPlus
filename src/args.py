@@ -22,6 +22,9 @@ def parse_all_args():
 
     parser.add_argument("-u", help="units (default: \"system units\")",
                         type=str,default="X",metavar="")
+    
+    parser.add_argument("-M", help="Total Mass",
+                        type=float,default=1.0,metavar="")
 
     # rotation parameters
     parser.add_argument("-a", help="Lynden-Bell trick flip fraction",

@@ -8,8 +8,14 @@ import numpy as np
 oldstyle = True
 
 def write_particles(w,args):
-    # apply the initial set shift
 
+    # multiply masses
+    w[:,0] *= args.M
+
+    # scale up velocities
+    w[:,4:] *= np.sqrt(args.M)
+
+    # apply the initial set shift (this needs to come last!)
     w[:,1:] += args.init
 
     # this version writes for EXP

@@ -27,6 +27,9 @@ A laundry list of examples:
 # isotropic plummmer with 8K particles
 ./PlummerPlus.py -n 8192
 
+# isotropic plummmer with 8K particles, with M=2, and an initial position and velocity
+./PlummerPlus.py -n 8192 -M 2 -init 8. 0. 0. 0. 220. 0.
+
 # 8k anisotropic plummer with Dejonghe with q=-2 (see Dejonghe 1987)
 ./PlummerPlus.py -n 8192 -q -2
 
