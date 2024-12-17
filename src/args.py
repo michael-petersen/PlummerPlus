@@ -44,9 +44,12 @@ def parse_all_args():
     parser.add_argument("-icut", help=" cut on inclination normalise to range 0-1 (0-90 degrees)",
                         type=float,default=[-1,0,0],metavar=("G","AU","AO"),nargs=3)
 
-    parser.add_argument("-init", help=" initial position and velocity vector for offsetting cluster",
+    parser.add_argument("-init", help=" initial position and velocity vector for offsetting cluster ",
 			type=float,default=[0.0,0.0,0.0,0.0,0.0,0.0],metavar="",nargs=6)
 
+    parser.add_argument("-scale", help=" sets the scale of the model, default is 1.0 ",
+                       type=float,default=1.0,metavar="")
+    
     # exclusive arguments for velocity space
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-q", help="q values of Dejonghe (1987) anisotropic plummer models, q<=+2 ",

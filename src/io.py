@@ -12,8 +12,11 @@ def write_particles(w,args):
     # multiply masses
     w[:,0] *= args.M
 
-    # scale up velocities
-    w[:,4:] *= np.sqrt(args.M)
+    # scale positions
+    w[:,1:4] *= args.scale
+
+    # scale velocities
+    w[:,4:] *= np.sqrt(args.M/args.scale)
 
     # apply the initial set shift (this needs to come last!)
     w[:,1:] += args.init
